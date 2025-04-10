@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Processos minerários no Brasil</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <meta charset="utf-8">
+  <style>
+    html,
+    body,
+    form,
+    fieldset,
+    table,
+    tr,
+    td,
+    img {
+      margin: 0;
+      padding: 0;
+      font: 100%/150% calibri, helvetica, sans-serif;
+    }
+
+    td,
+    td * {
+      max-height: 30px !important;
+    }
+
+    #controls {
+      margin: 20px;
+    }
+
+    #map {
+      width: 90%;
+      height: 600px;
+      margin: auto;
+    }
+  </style>
+</head>
+
+<body style="width: 100%; height: 100%; margin: 0">
+  <table style="width: 100%; margin: 0px; padding: 0px; border-width:0px;">
+    <tbody>
+      <tr height="10px">
+        <td>UNIVERSIDADE FEDERAL DE CAMPINA GRANDE - UFCG</td>
+        <td style="text-align: right;">Disciplina: Visualiza&ccedil;&atilde;o de Dados (TECC)</td>
+      </tr>
+      <tr>
+        <td>CENTRO DE ENGENHARIA EL&Eacute;TRICA E INFORM&Aacute;TICA - CEEI</td>
+        <td style="text-align: right;">Professor: Maxwell Guimar&atilde;es de Oliveira</td>
+      </tr>
+      <tr>
+        <td>UNIDADE ACAD&Ecirc;MICA DE SISTEMAS E COMPUTA&Ccedil;&Atilde;O - UASC</td>
+        <td style="text-align: right;">Período: 2024.2</td>
+      </tr>
+    </tbody>
+  </table>
+  <div id="header">
+    <h2 style="text-align:center;">Projeto de Visualização Interativa de Dados</h2>
+    <h4 style="text-align:center;"><u>Grupo E</u>: Guilherme Peixoto, João Juvino, João Oliveira, Rodrigo
+      Pedrosa&nbsp; &nbsp;</h4>
+    <p style="text-align:center;">&nbsp;</p>
+    <h2 style="text-align:center;"><span
+        style="font-family:'Lucida Sans Unicode', 'Lucida Grande', sans-serif;"><strong>Novos processos minerários
+          ativos anualmente no Brasil</strong></span></h3>
+      <p style="text-align:justify; padding: 10px 50px 10px 50px;">
+        Os dados apresentados na visualização abaixo se referem aos processos minerários ativos no Brasil, de acordo com
+        o SIGMINE. Devido a grande quantidade de dados, na casa das centenas de milhares, os dados são exibidos
+        anualmente, ou seja, o que é visto no mapa são os processos criados ao longo de cada ano que permanecem ativos
+        até então. Dessa forma, é possível observar a história da mineração no Brasil nos últimos 90 anos. Além disso, é
+        possível aplicar filtros que dividem os dados em categorias, se tornando possível observar os processos
+        minerários referentes a grupos específicos de recursos, como por exemplo, a exploração de gemas e pedras
+        preciosas, em que é possível visualizar a criação de novas minas de diamantes, rubi, esmeralda etc com o passar
+        dos anos no Brasil. Por fim, é possível dar zoom em áreas específicas, para visualizar o desenvolvimento da
+        atividade mineral naquela região.</p>
+  </div>
+  <div id="container" style="max-width: 100%; height:700px; padding: 10px 50px 10px 50px;">
+
+    <div id="controls">
+      <label for="categoryFilter">Filtrar por categoria:</label>
+      <select id="categoryFilter">
+        <option value="TODAS">Todas</option>
+      </select>
+    </div>
+
+    <div id="map"></div>
+  </div>
+  <div id="footer" style="height: 2%">
+    <p style="text-align:justify; padding: 20px 50px 0px 50px;"><b>Dicas para interagir com a visualização</b>:</p>
+    <ul style="padding: 0px 50px 10px 75px;">
+      <li>É possível aplicar zoom no mapa para obter uma visão de uma área específica do Brasil.</li>
+      <li>Ao colocar o mouse em cima de um dos pontos de mineração, é possível visualizar o material extraído naquela
+        região, a área em hectares destinada a exploração daquele recurso e também o nome de quem possui o título
+        necessário para explorar aquela terra.</li>
+      <li>A visualização passa automaticamente os anos, permitindo que o usuário observe a quantidade de novas minas
+        criadas anualmente. É possível pausar o play automático clicando no botão com o símbolo de "pause", a esquerda
+        da linha do tempo.</li>
+      <li>Na parte superior do gráfico, existe um filtro por categoria do recurso explorado, sendo possível selecionar
+        uma categoria específica para ser exibida.</li>
+      <li>Ao selecionar um recurso na legenda, é possível alternar se ele deve ou não ser exibido no mapa. Dessa forma,
+        se o usuário quiser selecionar apenas as aparições de um recurso em específico, basta selecionar apenas ele.
+      </li>
+    </ul>
+  </div>
+
+  <script type="text/javascript" src="https://fastly.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+  <script type="text/javascript" src="https://fastly.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+
+  <script>
+    $(function () {
+      const myChart = echarts.init(document.getElementById("map"));
+      myChart.showLoading();
+
+      const subsColors = {};
+      const allData = {};
+      const colorMap = {
+        'DIAMANTE': '#B9F2FF',
+        'ESMERALDA': '#009B77',
+        'RUBI': '#CC0166',
+        'SAFIRA': '#0B3D91',
+        'TURMALINA': '#8A2BE2',
+        'AMETISTA': '#6A4C9C',
+        'TOPÁZIO': '#FFAA1D',
+        'ALEXANDRITA': '#00CC99',
+        'ÁGATA': '#C46210',
+        'OPALA': '#FFF4E6',
+        'TURQUESA': '#30D5C8',
+        'CHUMBO': '#4B4B4B',
+        'CROMO': '#A8A9AD',
+        'CÁDMIO': '#FF6103',
+        'ZINCO': '#7E7E7E',
+        'MERCÚRIO': '#D8D8D8',
+        'OURO': '#FFD700',
+        'PRATA': '#C5C9C7',
+        'PLATINA': '#E6E8FA',
+        'TUNGSTÊNIO': '#2A2A2A',
+        'NÍQUEL': '#727279',
+        'ALUMÍNIO': '#A1A1A1',
+        'FERRO': '#43464B',
+        'COBRE': '#B87333',
+        'MANGANÊS': '#9F7A35',
+        'TITÂNIO': '#878681',
+        'ESTANHO': '#808080',
+        'LÍTIO': '#CCCCCC',
+        'NIÓBIO': '#5D8AA8',
+        'QUARTZO': '#E8E0D9',
+        'FELDSPATO': '#FFFDD0',
+        'TALCO': '#F8F8FF',
+        'GRAFITA': '#1C1C1C',
+        'CAULIM': '#FFFFF0',
+        'MICA': '#E3DAC9',
+        'ENXOFRE': '#FFD300',
+        'GIPSITA': '#F5F5F5',
+        'BARITA': '#666662',
+        'FLUORITA': '#3FD2FF',
+        'GRANITO': '#696969',
+        'MÁRMORE': '#EDE6D6',
+        'BASALTO': '#2F2F2F',
+        'ARDÓSIA': '#708090',
+        'ARENITO': '#D1B280',
+        'GNAISSE': '#5F5F5F',
+        'CALCÁRIO': '#F5F5DC',
+        'CARVÃO': '#000000',
+        'URÂNIO': '#00FF00',
+        'FOSFATO': '#A9A9A9',
+        'SÍLICA': '#C0C0C0',
+        'BORATOS': '#D2B48C',
+        'MAGNÉSIO': '#B0B0B0',
+        'AREIA': '#F4D03F',
+        'ARGILA': '#8B4513',
+        'CASCALHO': '#CD853F',
+        'SAIBRO': '#6B4423',
+        'ÁGUA MINERAL': '#00BFFF'
+      };
+
+      function getColor(subs) {
+        const upperSubs = subs.toUpperCase();
+        if (colorMap[upperSubs]) {
+          return colorMap[upperSubs];
+        }
+
+        if (!subsColors[upperSubs]) {
+          const hash = [...upperSubs].reduce((acc, char) => acc + char.charCodeAt(0), 0);
+          const hue = hash % 360;
+          subsColors[upperSubs] = `hsl(${hue}, 70%, 50%)`;
+        }
+        return subsColors[upperSubs];
+      }
+
+      function updateChart(categoryFilter) {
+        const sortedYears = Object.keys(allData);
+        const options = sortedYears.map((year) => {
+          const yearData = allData[year] || {};
+          const subsSeries = [];
+
+          for (const [subs, entries] of Object.entries(yearData)) {
+            const filtered =
+              categoryFilter === "TODAS"
+                ? entries
+                : entries.filter((d) => d.categoria === categoryFilter);
+
+            if (filtered.length > 0) {
+              subsSeries.push({
+                name: subs,
+                type: "scatter",
+                coordinateSystem: "geo",
+                data: filtered,
+                symbolSize: (val) => Math.sqrt(val[2]) * 0.3 + 2,
+                itemStyle: {
+                  color: getColor(subs),
+                },
+                emphasis: {
+                  scale: true,
+                },
+              });
+            }
+          }
+
+          return {
+            title: {
+              text: `Novas atividades minerais no Brasil - ${year}`,
+              left: "center",
+            },
+            series: subsSeries,
+          };
+        });
+
+        const finalOption = {
+          baseOption: {
+            timeline: {
+              axisType: "category",
+              autoPlay: true,
+              playInterval: 3000,
+              data: sortedYears,
+              label: {
+                formatter: (s) => s,
+              },
+              tooltip: {
+                show: false
+              }
+            },
+            tooltip: {
+              trigger: "item",
+              formatter: (params) => {
+                return `
+                    Substância: ${params.seriesName}<br/>
+                    Área: ${params.value[2]} ha<br/>
+                    Extrator: ${params.value[3]}
+                  `;
+              },
+            },
+            geo: {
+              map: "Brazil",
+              roam: true,
+              scaleLimit: {
+                min: 1,
+                max: 10,
+              },
+              emphasis: {
+                label: {
+                  show: false,
+                },
+              },
+            },
+            legend: {
+              orient: "vertical",
+              right: 10,
+              top: "middle",
+              textStyle: {
+                fontSize: 12,
+              },
+            },
+            series: [],
+          },
+          options: options,
+        };
+
+        myChart.clear();
+        myChart.setOption(finalOption);
+      }
+      
+      // Como íamos utilizar o mapa do Brasil, foi necessário pegar o arquivo por fora, já que era muito grande para deixar no HTML.
+      $.get(
+        "https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/brazil-states.geojson",
+        function (brazilJson) {
+          echarts.registerMap("Brazil", brazilJson);
+          myChart.hideLoading();
+          
+          // O dataframe após o tratamento dos dados ainda ficou com mais de 200 mil linhas, sendo inviável deixar no próprio HTML.
+          $.get(
+            "https://raw.githubusercontent.com/Jaovicttor/vdd-prova3/v1/df_vdd.csv",
+            function (csvData) {
+              const lines = csvData.split("\n");
+              const header = lines[0].split(",");
+
+              const yearIndex = header.indexOf("ANO");
+              const subsIndex = header.indexOf("SUBS");
+              const wktIndex = header.indexOf("WKT");
+              const areaIndex = header.indexOf("AREA_HA");
+              const catIndex = header.indexOf("CATEGORIA");
+              const companyIndex = header.indexOf("NOME");
+
+              const categorySet = new Set();
+
+              for (let i = 1; i < lines.length; i++) {
+                const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.trim().replace(/^"|"$/g, ''));
+                if (cols.length < 6) continue;
+
+                const subs = cols[subsIndex]?.trim().toUpperCase();
+                const wkt = cols[wktIndex];
+                const area = parseFloat(cols[areaIndex]) || 0;
+                const year = cols[yearIndex]?.trim();
+                const categoria = cols[catIndex]?.trim();
+                const company = cols[companyIndex]?.trim();
+                if (!year || !subs || !categoria) continue;
+
+                const match = wkt.match(
+                  /POINT \((-?\d+\.\d+) (-?\d+\.\d+)\)/
+                );
+                if (match) {
+                  const longitude = parseFloat(match[1]);
+                  const latitude = parseFloat(match[2]);
+
+                  if (!allData[year]) allData[year] = {};
+                  if (!allData[year][subs]) allData[year][subs] = [];
+
+                  allData[year][subs].push({
+                    value: [longitude, latitude, area, company],
+                    categoria: categoria,
+                  });
+
+                  categorySet.add(categoria);
+                }
+              }
+
+              const select = document.getElementById("categoryFilter");
+              categorySet.forEach((cat) => {
+                const option = document.createElement("option");
+                option.value = cat;
+                option.textContent = cat;
+                select.appendChild(option);
+              });
+
+              select.addEventListener("change", (e) => {
+                updateChart(e.target.value);
+              });
+
+              updateChart("TODAS");
+            }
+          );
+        }
+      );
+    });
+  </script>
+</body>
+
+</html>
