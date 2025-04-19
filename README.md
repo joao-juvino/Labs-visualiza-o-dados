@@ -1,2 +1,2 @@
 # Visualização de dados
-atividades práticas de visualização de dados 
+Principais atividades práticas de visualização de dados 
